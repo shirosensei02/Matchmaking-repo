@@ -26,7 +26,7 @@ public class ProjectApplication {
     TournamentRepository repo = ctx.getBean(TournamentRepository.class);
 
     template.execute(
-        "CREATE TABLE IF NOT EXISTS tournaments (" +
+        "CREATE TABLE IF NOT EXISTS results (" +
             "t_id          BIGSERIAL PRIMARY KEY," +
             "r_id        BIGINT NOT NULL," +
             "m_id        BIGINT NOT NULL," +
