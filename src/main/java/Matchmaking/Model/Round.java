@@ -1,7 +1,6 @@
 package Matchmaking.Model;
 
 import jakarta.persistence.*;
-import java.util.List;
 
 @Entity
 @Table(name = "rounds")
@@ -14,19 +13,23 @@ public class Round {
     @Column(name = "tournament_id")
     private Long tournamentId;
 
-    @Column(name = "round_number")
-    private Integer roundNumber; // To track the round (1, 2, or 3)
+    @Column(name = "round_id")
+    private Integer roundId;  // Tracks the round (0, 1, 2, etc.)
 
-    @Column(name = "matches", columnDefinition = "json")
-    private String matches; // JSON containing 4 matches of 8 players each
+    @Column(name = "match_id")
+    private Integer matchId;  // Tracks the match within the round (1, 2, 3, 4)
+
+    @Column(name = "players_data", columnDefinition = "json")
+    private String playersData;  // JSON structure containing 8 players for this match
 
     public Round() {
     }
 
-    public Round(Long tournamentId, Integer roundNumber, String matches) {
+    public Round(Long tournamentId, Integer roundId, Integer matchId, String playersData) {
         this.tournamentId = tournamentId;
-        this.roundNumber = roundNumber;
-        this.matches = matches;
+        this.roundId = roundId;
+        this.matchId = matchId;
+        this.playersData = playersData;
     }
 
     // Getters and setters
@@ -46,19 +49,27 @@ public class Round {
         this.tournamentId = tournamentId;
     }
 
-    public Integer getRoundNumber() {
-        return roundNumber;
+    public Integer getRoundId() {
+        return roundId;
     }
 
-    public void setRoundNumber(Integer roundNumber) {
-        this.roundNumber = roundNumber;
+    public void setRoundId(Integer roundId) {
+        this.roundId = roundId;
     }
 
-    public String getMatches() {
-        return matches;
+    public Integer getMatchId() {
+        return matchId;
     }
 
-    public void setMatches(String matches) {
-        this.matches = matches;
+    public void setMatchId(Integer matchId) {
+        this.matchId = matchId;
+    }
+
+    public String getPlayersData() {
+        return playersData;
+    }
+
+    public void setPlayersData(String playersData) {
+        this.playersData = playersData;
     }
 }

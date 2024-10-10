@@ -22,8 +22,9 @@ public class RoundService {
 
     /**
      * Initial method to create the first round from a list of 32 players.
-     * Splits the 32 players into four groups of eight and stores them into the
-     * round table.
+     * Splits the 32 players into four groups of eight, assigns match IDs (1, 2, 3,
+     * 4),
+     * and stores each group into the round table.
      */
     @Transactional
     public List<Round> createFirstRound(Long tournamentId, String playersData) {
@@ -33,11 +34,16 @@ public class RoundService {
         // Use the matchmaking algorithm to split players into groups of 8
         List<List<Map<String, Object>>> matches = matchmakingAlgorithm(players);
 
-        // Store each group of 8 players into the round table (4 rows, one for each
-        // match)
+        // Store each group of 8 players into the round table with corresponding match
+        // IDs (1, 2, 3, 4)
         List<Round> rounds = new ArrayList<>();
-        for (int i = 0; i < matches.size(); i++) {
-            Round round = new Round(tournamentId, 1, serializeMatchesToJson(matches.get(i))); // Round 1
+        for (int matchId = 1; matchId <= matches.size(); matchId++) {
+            // Create and save each match as a separate Round record
+            Round round = new Round(tournamentId, 1, matchId, serializeMatchesToJson(matches.get(matchId - 1))); // Round
+                                                                                                                 // 1,
+                                                                                                                 // Match
+                                                                                                                 // ID
+                                                                                                                 // 1-4
             rounds.add(roundRepository.save(round));
         }
 
@@ -65,10 +71,12 @@ public class RoundService {
         // Split the recalibrated players back into 4 groups of 8
         List<List<Map<String, Object>>> newMatches = matchmakingAlgorithm(recalibratedPlayers);
 
-        // Store each group of 8 players into the round table (4 rows for this round)
+        // Store each group of 8 players into the round table with new match IDs (1, 2,
+        // 3, 4)
         List<Round> rounds = new ArrayList<>();
-        for (int i = 0; i < newMatches.size(); i++) {
-            Round round = new Round(tournamentId, currentRound, serializeMatchesToJson(newMatches.get(i)));
+        for (int matchId = 1; matchId <= newMatches.size(); matchId++) {
+            Round round = new Round(tournamentId, currentRound, matchId,
+                    serializeMatchesToJson(newMatches.get(matchId - 1)));
             rounds.add(roundRepository.save(round));
         }
 
