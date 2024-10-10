@@ -3,7 +3,6 @@ package Matchmaking;
 import Matchmaking.Model.Round;
 import Matchmaking.Model.RoundRepository;
 import Matchmaking.Model.RoundService;
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -31,41 +30,34 @@ public class RoundServiceTest {
 
     @Test
     public void testCreateTournamentRounds() {
-        // Sample data
+        // Sample tournament and players data
         Long tournamentId = 1L;
-        String playersData = "[{\"player_id\":1,\"rank_id\":3},{\"player_id\":2,\"rank_id\":4},...]"; // Simulated
-                                                                                                      // player JSON
-                                                                                                      // data
+        String playersData = "[{\"player_id\":1,\"rank_id\":3},{\"player_id\":2,\"rank_id\":4},...]";
 
-        // Simulate behavior of repository's save method
+        // Mock the repository's save behavior
         when(roundRepository.save(any(Round.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         // Call the service method
         List<Round> rounds = roundService.createTournamentRounds(tournamentId, playersData);
 
-        // Verify the rounds were created for 3 rounds
+        // Verify that 3 rounds are created
         assertEquals(3, rounds.size());
 
-        // Verify the repository's save method was called
+        // Verify that save was called 3 times (once for each round)
         verify(roundRepository, times(3)).save(any(Round.class));
     }
 
     @Test
-    public void testCreateRounds() {
-        // Sample data
-        Long tournamentId = 1L;
-        String playersData = "[{\"player_id\":1,\"rank_id\":3},{\"player_id\":2,\"rank_id\":4}]"; // JSON with 32
-                                                                                                  // players
+    public void testMatchmakingAlgorithm() {
+        List<String> players = new ArrayList<>();
+        for (int i = 1; i <= 32; i++) {
+            players.add("Player " + i);
+        }
 
-        // Simulate repository behavior for save
-        when(roundRepository.save(any(Round.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        List<List<String>> groups = roundService.matchmakingAlgorithm(players);
 
-        // Test the service logic
-        List<Round> rounds = roundService.createTournamentRounds(tournamentId, playersData);
-
-        assertEquals(3, rounds.size()); // Expect 3 rounds
-
-        // Verify the repository save method was called 3 times
-        verify(roundRepository, times(3)).save(any(Round.class));
+        // Check that the matchmaking algorithm splits players into 4 groups of 8 players each
+        assertEquals(4, groups.size());
+        assertEquals(8, groups.get(0).size());
     }
 }

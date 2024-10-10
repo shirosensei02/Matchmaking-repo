@@ -1,7 +1,5 @@
 package Matchmaking.Model;
 
-import Matchmaking.Model.Round;
-import Matchmaking.Model.RoundRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -22,15 +20,17 @@ public class RoundService {
         List<String> players = parsePlayersFromJson(playersData); // Convert JSON to list of 32 players
 
         for (int roundNumber = 1; roundNumber <= 3; roundNumber++) {
-            // Apply matchmaking algorithm for each round
+            // Apply matchmaking algorithm for each round to split players into 4 groups
             List<List<String>> groups = matchmakingAlgorithm(players); // 4 groups of 8 players
 
-            // Create JSON structure for the 4 matches
-            String matchesJson = serializeMatchesToJson(groups);
+            for (int matchId = 1; matchId <= 4; matchId++) {
+                // For each group (match), serialize the players in that match to JSON
+                String matchJson = serializeMatchesToJson(groups.get(matchId - 1));
 
-            // Create and save the round
-            Round round = new Round(tournamentId, roundNumber, matchesJson);
-            rounds.add(roundRepository.save(round));
+                // Create and save each round with a specific match ID
+                Round round = new Round(tournamentId, roundNumber, matchId, matchJson);
+                rounds.add(roundRepository.save(round));  // Save each match as a separate entry
+            }
 
             // After each round, recalibrate ranks based on match results
             players = recalibratePlayerRanks(groups);
@@ -40,8 +40,7 @@ public class RoundService {
     }
 
     // Helper method to split players into 4 matches (groups of 8 players each)
-    private List<List<String>> matchmakingAlgorithm(List<String> players) {
-        // Your custom matchmaking algorithm logic
+    public List<List<String>> matchmakingAlgorithm(List<String> players) {
         List<List<String>> groups = new ArrayList<>();
         for (int i = 0; i < 4; i++) {
             groups.add(new ArrayList<>(players.subList(i * 8, (i + 1) * 8)));
@@ -50,21 +49,20 @@ public class RoundService {
     }
 
     // Helper method to parse JSON string into list of players
-    private List<String> parsePlayersFromJson(String json) {
+    public List<String> parsePlayersFromJson(String json) {
         // Use Jackson or Gson to parse the JSON
         return new ArrayList<>(); // Placeholder for actual parsing logic
     }
 
     // Helper method to serialize matches (groups of 8 players) back to JSON
-    private String serializeMatchesToJson(List<List<String>> matches) {
-        // Use Jackson or Gson to serialize the groups (matches) into a JSON string
-        return matches.toString(); // Placeholder for actual serialization logic
+    public String serializeMatchesToJson(List<String> match) {
+        // Use Jackson or Gson to serialize the match (list of 8 players) into a JSON string
+        return match.toString(); // Placeholder for actual serialization logic
     }
 
     // Helper method to recalibrate player ranks after a round
-    private List<String> recalibratePlayerRanks(List<List<String>> matches) {
+    public List<String> recalibratePlayerRanks(List<List<String>> matches) {
         // Update player ranks based on the results of the matches
-        // Placeholder logic for recalibration
         return new ArrayList<>(); // Return updated list of 32 players
     }
 }
