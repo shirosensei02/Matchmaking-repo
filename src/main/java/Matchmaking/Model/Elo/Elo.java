@@ -1,8 +1,10 @@
+package Matchmaking.Model.Elo;
+
 import java.util.ArrayList;
 import java.util.List;
 
-import main.java.cs204.project.model.Elo.Game;
-import main.java.cs204.project.model.Elo.Player;
+import Matchmaking.Model.Elo.Game;
+import Matchmaking.Model.Elo.Player;
 
 public class Elo {
   private List<Player> playerList;
@@ -13,7 +15,7 @@ public class Elo {
     this.playerList = playerList;
   }
 
-  public void updateRank(){
+  public void updateRank() {
     Game game = new Game(playerList);
     playerList = game.endGame();
 
@@ -37,7 +39,7 @@ public class Elo {
 
     // Loop through each opponent's rating and calculate expected score
     for (Player opposingPlayer : playerList) {
-      if (!opposingPlayer.equals(player)){
+      if (!opposingPlayer.equals(player)) {
         totalExpectedScore += calculateExpectedScore(player.getRank(), opposingPlayer.getRank());
       }
     }
