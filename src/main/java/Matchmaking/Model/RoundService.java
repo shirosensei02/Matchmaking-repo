@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import Matchmaking.Model.Elo.Elo;
 import Matchmaking.Model.Elo.Player;
 
 import java.util.ArrayList;
@@ -125,8 +126,8 @@ public class RoundService {
     }
 
     // Helper method to recalibrate player ranks after a round
-    private List<Player> recalibratePlayerRanks(List<Player> matches) {
+    public List<Player> recalibratePlayerRanks(List<Player> matches) {
         Elo elo = new Elo(matches);
         return elo.updateRank();
-    }
+}
 }

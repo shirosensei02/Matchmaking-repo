@@ -3,8 +3,6 @@ package Matchmaking.Model.Elo;
 import java.util.ArrayList;
 import java.util.List;
 
-import Matchmaking.Model.Elo.Game;
-import Matchmaking.Model.Elo.Player;
 
 public class Elo {
   private List<Player> playerList;
@@ -15,9 +13,9 @@ public class Elo {
     this.playerList = playerList;
   }
 
-  public void updateRank() {
+  public List<Player> updateRank(){
     Game game = new Game(playerList);
-    playerList = game.endGame();
+    playerList = game.gameEnd();
 
     for (int i = 0; i < playerList.size(); i++) {
       Player player = playerList.get(i);
@@ -25,6 +23,7 @@ public class Elo {
       int updatedRank = player.getRank() + (k * (score[i] - expectedScore));
       player.setRank(updatedRank);
     }
+    return playerList;
   }
 
   // Method to calculate expected score for a player against another player
@@ -39,7 +38,7 @@ public class Elo {
 
     // Loop through each opponent's rating and calculate expected score
     for (Player opposingPlayer : playerList) {
-      if (!opposingPlayer.equals(player)) {
+      if (!opposingPlayer.equals(player)){
         totalExpectedScore += calculateExpectedScore(player.getRank(), opposingPlayer.getRank());
       }
     }
@@ -48,23 +47,4 @@ public class Elo {
     return (int) totalExpectedScore / (playerList.size() - 1);
   }
 
-  public static void main(String[] args) {
-    List<Player> players = new ArrayList<>();
-
-    players.add(new Player(1, 1000));
-    players.add(new Player(2, 2000));
-    players.add(new Player(3, 1500));
-    players.add(new Player(4, 1340));
-    players.add(new Player(5, 900));
-    players.add(new Player(6, 1690));
-    players.add(new Player(7, 1200));
-    players.add(new Player(8, 1700));
-
-    Elo elo = new Elo(players);
-    elo.updateRank();
-
-    for (Player player : players) {
-      System.out.println(player.toString());
-    }
-  }
 }
