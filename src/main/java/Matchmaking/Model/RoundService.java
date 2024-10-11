@@ -3,18 +3,17 @@ package Matchmaking.Model;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 @Service
 public class RoundService {
 
     private final RoundRepository roundRepository;
-    private final ObjectMapper objectMapper = new ObjectMapper(); // Jackson ObjectMapper for JSON processing
 
     public RoundService(RoundRepository roundRepository) {
         this.roundRepository = roundRepository;
@@ -22,135 +21,116 @@ public class RoundService {
 
     /**
      * Initial method to create the first round from a list of 32 players.
-     * Splits the 32 players into four groups of eight, assigns match IDs (1, 2, 3,
-     * 4),
+     * Extracts tournamentId and a list of Player objects from the payload,
+     * splits players into groups of 8, assigns match IDs (1, 2, 3, 4),
      * and stores each group into the round table.
      */
     @Transactional
-    public List<Round> createFirstRound(Long tournamentId, String playersData) {
-        // Parse players from the JSON input (32 players with IDs and ranks)
-        List<Map<String, Object>> players = parsePlayersFromJson(playersData);
+    public List<List<Player>> createFirstRound(Map<String, Object> payload) {
+        // Extract the tournamentId and players data from the payload
+        Long tournamentId = (Long) payload.get("tournamentId");
+        @SuppressWarnings("unchecked")
+        List<Player> players = (List<Player>) payload.get("players");
 
         // Use the matchmaking algorithm to split players into groups of 8
-        List<List<Map<String, Object>>> matches = matchmakingAlgorithm(players);
+        List<List<Player>> matches = matchmakingAlgorithm(players);
 
         // Store each group of 8 players into the round table with corresponding match
         // IDs (1, 2, 3, 4)
-        List<Round> rounds = new ArrayList<>();
         for (int matchId = 1; matchId <= matches.size(); matchId++) {
+            // Serialize players data for each group into JSON (optional based on DB
+            // structure)
+            String playersData = serializePlayersToJson(matches.get(matchId - 1));
+
             // Create and save each match as a separate Round record
-            Round round = new Round(tournamentId, 1, matchId, serializeMatchesToJson(matches.get(matchId - 1))); // Round
-                                                                                                                 // 1,
-                                                                                                                 // Match
-                                                                                                                 // ID
-                                                                                                                 // 1-4
-            rounds.add(roundRepository.save(round));
+            Round round = new Round(tournamentId, 1, matchId, playersData); // Round 1, Match ID 1-4
+            roundRepository.save(round);
         }
 
-        return rounds; // Return the saved rounds
+        // Return the groups of 8 players (List<List<Player>>)
+        return matches;
     }
 
     /**
      * Method to create subsequent rounds (2 and 3).
-     * Recalibrates player ranks based on match results, combines players back to
-     * 32, and splits them again.
+     * Extracts tournamentId, players, and roundNumber from the payload,
+     * recalibrates player ranks, combines players back to 32, and splits them
+     * again.
      */
     @Transactional
-    public List<Round> createNextRound(Long tournamentId, List<String> matchResultsData, int currentRound) {
+    public List<Round> createNextRound(Map<String, Object> payload) {
+        // Extract tournamentId, players, and roundNumber from the payload
+        Long tournamentId = (Long) payload.get("tournamentId");
+        @SuppressWarnings("unchecked")
+        List<Player> players = (List<Player>) payload.get("players");
+        Integer roundNumber = (Integer) payload.get("roundNumber");
+
         // Validate that the round number is either 2 or 3
-        if (currentRound < 2 || currentRound > 3) {
+        if (roundNumber < 2 || roundNumber > 3) {
             throw new IllegalStateException("Invalid round number. Only rounds 2 and 3 are allowed.");
         }
 
-        // Parse the match results (4 lists of 8 players with IDs and ranks)
-        List<List<Map<String, Object>>> matches = parseMatchesFromJson(matchResultsData);
+        // Use the matchmaking algorithm to split players into 4 groups of 8 players
+        List<List<Player>> matches = matchmakingAlgorithm(players);
 
         // Recalibrate player ranks based on match results
-        List<Map<String, Object>> recalibratedPlayers = recalibratePlayerRanks(matches);
+        List<Player> recalibratedPlayers = recalibratePlayerRanks(matches);
 
-        // Split the recalibrated players back into 4 groups of 8
-        List<List<Map<String, Object>>> newMatches = matchmakingAlgorithm(recalibratedPlayers);
+        // Split recalibrated players into 4 new groups
+        List<List<Player>> newMatches = matchmakingAlgorithm(recalibratedPlayers);
 
-        // Store each group of 8 players into the round table with new match IDs (1, 2,
-        // 3, 4)
+        // Store each new match in the round table with new match IDs (1, 2, 3, 4)
         List<Round> rounds = new ArrayList<>();
         for (int matchId = 1; matchId <= newMatches.size(); matchId++) {
-            Round round = new Round(tournamentId, currentRound, matchId,
-                    serializeMatchesToJson(newMatches.get(matchId - 1)));
+            String playersData = serializePlayersToJson(newMatches.get(matchId - 1));
+            Round round = new Round(tournamentId, roundNumber, matchId, playersData);
             rounds.add(roundRepository.save(round));
         }
 
         return rounds; // Return the saved rounds
     }
 
-    // Helper method to split players into 4 matches (groups of 8 players each)
-    private List<List<Map<String, Object>>> matchmakingAlgorithm(List<Map<String, Object>> players) {
-        List<List<Map<String, Object>>> groups = new ArrayList<>();
+    // Helper method to split players into 4 groups based on their ranking
+    private List<List<Player>> matchmakingAlgorithm(List<Player> players) {
+        // Step 1: Sort players by their rank in descending order
+        players.sort((p1, p2) -> Integer.compare(p2.getRank(), p1.getRank()));
+
+        // Step 2: Distribute players into 4 groups in a round-robin fashion
+        List<List<Player>> groups = new ArrayList<>();
         for (int i = 0; i < 4; i++) {
-            groups.add(new ArrayList<>(players.subList(i * 8, (i + 1) * 8)));
+            groups.add(new ArrayList<>()); // Initialize 4 groups
         }
+
+        for (int i = 0; i < players.size(); i++) {
+            // Distribute players across 4 groups
+            groups.get(i % 4).add(players.get(i));
+        }
+
         return groups;
     }
 
-    // Helper method to parse JSON string into a list of player data (ID and rank)
-    private List<Map<String, Object>> parsePlayersFromJson(String json) {
+    // Helper method to serialize players (list of Player objects) back to JSON
+    private String serializePlayersToJson(List<Player> players) {
         try {
-            // Each player is represented as a map containing "player_id" and "rank"
-            return objectMapper.readValue(json, new TypeReference<List<Map<String, Object>>>() {
-            });
-        } catch (Exception e) {
-            throw new RuntimeException("Error parsing players from JSON", e);
-        }
-    }
-
-    // Helper method to parse match results (for subsequent rounds)
-    private List<List<Map<String, Object>>> parseMatchesFromJson(List<String> jsonList) {
-        try {
-            List<List<Map<String, Object>>> matches = new ArrayList<>();
-            for (String json : jsonList) {
-                List<Map<String, Object>> match = objectMapper.readValue(json,
-                        new TypeReference<List<Map<String, Object>>>() {
-                        });
-                matches.add(match);
-            }
-            return matches;
-        } catch (Exception e) {
-            throw new RuntimeException("Error parsing match results from JSON", e);
-        }
-    }
-
-    // Helper method to serialize matches (groups of 8 players with IDs and ranks)
-    // back to JSON
-    private String serializeMatchesToJson(List<Map<String, Object>> match) {
-        try {
-            return objectMapper.writeValueAsString(match);
-        } catch (Exception e) {
-            throw new RuntimeException("Error serializing matches to JSON", e);
+            ObjectMapper objectMapper = new ObjectMapper();
+            return objectMapper.writeValueAsString(players);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException("Error serializing players to JSON", e);
         }
     }
 
     // Helper method to recalibrate player ranks after a round
-    public List<Map<String, Object>> recalibratePlayerRanks(List<List<Map<String, Object>>> matches) {
-        // Update player ranks based on the results of the matches
-        // Example logic (this should be replaced by your actual elo recalibration
-        // logic):
-        for (List<Map<String, Object>> match : matches) {
+    public List<Player> recalibratePlayerRanks(List<List<Player>> matches) {
+        List<Player> recalibratedPlayers = new ArrayList<>();
+        for (List<Player> match : matches) {
             for (int i = 0; i < match.size(); i++) {
-                // Assume each player is represented as a Map with "player_id" and "rank"
-                Map<String, Object> player = match.get(i);
-                int currentRank = (int) player.get("rank");
-
-                // Adjust rank based on match results (e.g., higher ranks for winners)
-                player.put("rank", currentRank + (8 - i)); // This is just a placeholder logic
+                Player player = match.get(i);
+                // Recalibrate rank based on the player's position in the match
+                int currentRank = player.getRank();
+                player.setRank(currentRank + (8 - i)); // Example logic: higher rank for better positions
+                recalibratedPlayers.add(player);
             }
         }
-
-        // Combine all recalibrated players back into a single list (32 players)
-        List<Map<String, Object>> recalibratedPlayers = new ArrayList<>();
-        for (List<Map<String, Object>> match : matches) {
-            recalibratedPlayers.addAll(match);
-        }
-
-        return recalibratedPlayers;
+        return recalibratedPlayers; // Return recalibrated players
     }
 }

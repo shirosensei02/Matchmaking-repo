@@ -1,5 +1,6 @@
 package Matchmaking;
 
+import Matchmaking.Model.Player;
 import Matchmaking.Model.Round;
 import Matchmaking.Model.RoundRepository;
 import Matchmaking.Model.RoundService;
@@ -10,8 +11,10 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.springframework.boot.test.mock.mockito.MockBean;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -34,66 +37,74 @@ public class RoundServiceTest {
     }
 
     @Test
-    public void testCreateFirstRound() throws JsonProcessingException {
-        Long tournamentId = 1L;
+public void testCreateFirstRound() throws JsonProcessingException {
+    Long tournamentId = 1L;
 
-        // Hardcoded 32 players with player_id and rank in JSON format
-        String playersData = "[{\"player_id\":1,\"rank\":10},{\"player_id\":2,\"rank\":8},"
-                + "{\"player_id\":3,\"rank\":15},{\"player_id\":4,\"rank\":12},"
-                + "{\"player_id\":5,\"rank\":6},{\"player_id\":6,\"rank\":7},"
-                + "{\"player_id\":7,\"rank\":9},{\"player_id\":8,\"rank\":5},"
-                + "{\"player_id\":9,\"rank\":14},{\"player_id\":10,\"rank\":13},"
-                + "{\"player_id\":11,\"rank\":11},{\"player_id\":12,\"rank\":3},"
-                + "{\"player_id\":13,\"rank\":2},{\"player_id\":14,\"rank\":1},"
-                + "{\"player_id\":15,\"rank\":16},{\"player_id\":16,\"rank\":4},"
-                + "{\"player_id\":17,\"rank\":20},{\"player_id\":18,\"rank\":19},"
-                + "{\"player_id\":19,\"rank\":18},{\"player_id\":20,\"rank\":17},"
-                + "{\"player_id\":21,\"rank\":21},{\"player_id\":22,\"rank\":22},"
-                + "{\"player_id\":23,\"rank\":24},{\"player_id\":24,\"rank\":23},"
-                + "{\"player_id\":25,\"rank\":25},{\"player_id\":26,\"rank\":26},"
-                + "{\"player_id\":27,\"rank\":27},{\"player_id\":28,\"rank\":28},"
-                + "{\"player_id\":29,\"rank\":29},{\"player_id\":30,\"rank\":30},"
-                + "{\"player_id\":31,\"rank\":31},{\"player_id\":32,\"rank\":32}]";
+    // Create a list of 32 Player objects with player_id and rank
+    List<Player> players = Arrays.asList(
+        new Player(1L, 10), new Player(2L, 8), new Player(3L, 15), new Player(4L, 12),
+        new Player(5L, 6), new Player(6L, 7), new Player(7L, 9), new Player(8L, 5),
+        new Player(9L, 14), new Player(10L, 13), new Player(11L, 11), new Player(12L, 3),
+        new Player(13L, 2), new Player(14L, 1), new Player(15L, 16), new Player(16L, 4),
+        new Player(17L, 20), new Player(18L, 19), new Player(19L, 18), new Player(20L, 17),
+        new Player(21L, 21), new Player(22L, 22), new Player(23L, 24), new Player(24L, 23),
+        new Player(25L, 25), new Player(26L, 26), new Player(27L, 27), new Player(28L, 28),
+        new Player(29L, 29), new Player(30L, 30), new Player(31L, 31), new Player(32L, 32)
+    );
 
-        // Mock the repository's save behavior and log the saved entities
-        when(roundRepository.save(any(Round.class))).thenAnswer(invocation -> {
-            Round savedRound = invocation.getArgument(0);
-            // Log or print the round that would be saved to the database
-            System.out.println("Saved round: " + savedRound);
-            return savedRound;
-        });
+    // Prepare the payload with tournamentId and players
+    Map<String, Object> payload = new HashMap<>();
+    payload.put("tournamentId", tournamentId);
+    payload.put("players", players);
 
-        // Call the service method
-        List<Round> rounds = roundService.createFirstRound(tournamentId, playersData);
+    // Mock the repository's save behavior and log the saved entities
+    when(roundRepository.save(any(Round.class))).thenAnswer(invocation -> {
+        Round savedRound = invocation.getArgument(0);
+        // Log or print the round that would be saved to the database
+        System.out.println("Saved round: " + savedRound);
+        return savedRound;
+    });
 
-        // Verify that 4 rounds are created (1 round with 4 matches)
-        assertEquals(4, rounds.size());
+    // Call the service method with the payload
+    List<List<Player>> matches = roundService.createFirstRound(payload);
 
-        // Verify that save was called 4 times (once for each match)
-        verify(roundRepository, times(4)).save(any(Round.class));
-    }
+    // Verify that 4 matches are created (4 groups of 8 players each)
+    assertEquals(4, matches.size());
 
-    @Test
+    // Verify that save was called 4 times (once for each match)
+    verify(roundRepository, times(4)).save(any(Round.class));
+
+    // You can also check specific details of the saved Rounds if necessary, such as matchId, roundId, etc.
+}
+
+@Test
 public void testCreateNextRound() throws JsonProcessingException {
     Long tournamentId = 1L;
     int currentRound = 2;
 
-    // Simulate the match results data (4 matches of 8 players)
-    List<String> matchResultsData = new ArrayList<>();
-    matchResultsData.add(
-            "[{\"player_id\":1,\"rank\":10},{\"player_id\":2,\"rank\":8},{\"player_id\":3,\"rank\":15},{\"player_id\":4,\"rank\":12},{\"player_id\":5,\"rank\":6},{\"player_id\":6,\"rank\":7},{\"player_id\":7,\"rank\":9},{\"player_id\":8,\"rank\":5}]");
-    matchResultsData.add(
-            "[{\"player_id\":9,\"rank\":14},{\"player_id\":10,\"rank\":13},{\"player_id\":11,\"rank\":11},{\"player_id\":12,\"rank\":3},{\"player_id\":13,\"rank\":2},{\"player_id\":14,\"rank\":1},{\"player_id\":15,\"rank\":16},{\"player_id\":16,\"rank\":4}]");
-    matchResultsData.add(
-            "[{\"player_id\":17,\"rank\":20},{\"player_id\":18,\"rank\":19},{\"player_id\":19,\"rank\":18},{\"player_id\":20,\"rank\":17},{\"player_id\":21,\"rank\":21},{\"player_id\":22,\"rank\":22},{\"player_id\":23,\"rank\":24},{\"player_id\":24,\"rank\":23}]");
-    matchResultsData.add(
-            "[{\"player_id\":25,\"rank\":25},{\"player_id\":26,\"rank\":26},{\"player_id\":27,\"rank\":27},{\"player_id\":28,\"rank\":28},{\"player_id\":29,\"rank\":29},{\"player_id\":30,\"rank\":30},{\"player_id\":31,\"rank\":31},{\"player_id\":32,\"rank\":32}]");
+    // Create a list of 32 Player objects with player_id and rank
+    List<Player> players = Arrays.asList(
+        new Player(1L, 10), new Player(2L, 8), new Player(3L, 15), new Player(4L, 12),
+        new Player(5L, 6), new Player(6L, 7), new Player(7L, 9), new Player(8L, 5),
+        new Player(9L, 14), new Player(10L, 13), new Player(11L, 11), new Player(12L, 3),
+        new Player(13L, 2), new Player(14L, 1), new Player(15L, 16), new Player(16L, 4),
+        new Player(17L, 20), new Player(18L, 19), new Player(19L, 18), new Player(20L, 17),
+        new Player(21L, 21), new Player(22L, 22), new Player(23L, 24), new Player(24L, 23),
+        new Player(25L, 25), new Player(26L, 26), new Player(27L, 27), new Player(28L, 28),
+        new Player(29L, 29), new Player(30L, 30), new Player(31L, 31), new Player(32L, 32)
+    );
+
+    // Prepare the payload with tournamentId, players, and roundNumber
+    Map<String, Object> payload = new HashMap<>();
+    payload.put("tournamentId", tournamentId);
+    payload.put("players", players);
+    payload.put("roundNumber", currentRound);
 
     // Mock the repository's save behavior
     when(roundRepository.save(any(Round.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
     // Call the service method for the next round
-    List<Round> rounds = roundService.createNextRound(tournamentId, matchResultsData, currentRound);
+    List<Round> rounds = roundService.createNextRound(payload);
 
     // Verify that 4 rounds are created
     assertEquals(4, rounds.size());
@@ -117,33 +128,45 @@ public void testCreateNextRound() throws JsonProcessingException {
     // Optional: Add assertions on the saved data
     assertEquals(tournamentId, savedRounds.get(0).getTournamentId());
     assertEquals(1, savedRounds.get(0).getMatchId());  // First match ID should be 1
+    assertEquals(currentRound, savedRounds.get(0).getRoundId());  // Round number should be 2 or 3
+
+    // Verify the players data (optional)
+    // You can add more specific checks on the "playersData" if needed
 }
 
 
 
-    @Test
-    public void testRecalibratePlayerRanks() {
-        // Create a sample match with player ranks
-        List<Map<String, Object>> match1 = new ArrayList<>();
-        Map<String, Object> player1 = new HashMap<>();
-        player1.put("player_id", 1);
-        player1.put("rank", 10); // Initial rank is 10
-        match1.add(player1);
+@Test
+public void testRecalibratePlayerRanks() {
+    // Create sample players for a match
+    Player player1 = new Player(1L, 10); // Initial rank is 10
+    Player player2 = new Player(2L, 8);  // Initial rank is 8
 
-        Map<String, Object> player2 = new HashMap<>();
-        player2.put("player_id", 2);
-        player2.put("rank", 8);
-        match1.add(player2);
+    // Print initial ranks
+    System.out.println("Before recalibration:");
+    System.out.println("Player 1 - ID: " + player1.getId() + ", Rank: " + player1.getRank());
+    System.out.println("Player 2 - ID: " + player2.getId() + ", Rank: " + player2.getRank());
 
-        // Simulate a match list with 1 match
-        List<List<Map<String, Object>>> matches = new ArrayList<>();
-        matches.add(match1);
+    // Create a match (a list of players)
+    List<Player> match1 = Arrays.asList(player1, player2);
 
-        // Call recalibratePlayerRanks
-        List<Map<String, Object>> recalibratedPlayers = roundService.recalibratePlayerRanks(matches);
+    // Simulate a list of matches (in this case, just one match with two players)
+    List<List<Player>> matches = new ArrayList<>();
+    matches.add(match1);
 
-        // Adjust the expected rank based on recalibration logic
-        assertEquals(18, recalibratedPlayers.get(0).get("rank")); // Rank increased by 8 (10 + 8)
-        assertEquals(15, recalibratedPlayers.get(1).get("rank")); // Rank increased by 7 (8 + 7)
+    // Call recalibratePlayerRanks to test the recalibration logic
+    List<Player> recalibratedPlayers = roundService.recalibratePlayerRanks(matches);
+
+    // Print recalibrated ranks
+    System.out.println("After recalibration:");
+    for (Player player : recalibratedPlayers) {
+        System.out.println("Player - ID: " + player.getId() + ", New Rank: " + player.getRank());
     }
+
+    // Check that the ranks have been updated correctly
+    // Player 1 (position 0 in the match) should have rank increased by (8 - 0 = 8)
+    assertEquals(18, recalibratedPlayers.get(0).getRank()); // 10 + 8 = 18
+    // Player 2 (position 1 in the match) should have rank increased by (8 - 1 = 7)
+    assertEquals(15, recalibratedPlayers.get(1).getRank()); // 8 + 7 = 15
+}
 }
