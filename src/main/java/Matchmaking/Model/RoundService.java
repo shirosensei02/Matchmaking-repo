@@ -6,6 +6,8 @@ import org.springframework.stereotype.Service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import Matchmaking.Model.Elo.Player;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -59,10 +61,11 @@ public class RoundService {
      */
     @Transactional
     public List<Round> createNextRound(Map<String, Object> payload) {
-        // Extract tournamentId, players, and roundNumber from the payload
+        // Extract tournamentId, matches (List<List<Player>>), and roundNumber from the
+        // payload
         Long tournamentId = (Long) payload.get("tournamentId");
         @SuppressWarnings("unchecked")
-        List<Player> players = (List<Player>) payload.get("players");
+        List<List<Player>> matches = (List<List<Player>>) payload.get("players"); // Now a list of lists
         Integer roundNumber = (Integer) payload.get("roundNumber");
 
         // Validate that the round number is either 2 or 3
@@ -70,19 +73,21 @@ public class RoundService {
             throw new IllegalStateException("Invalid round number. Only rounds 2 and 3 are allowed.");
         }
 
-        // Use the matchmaking algorithm to split players into 4 groups of 8 players
-        List<List<Player>> matches = matchmakingAlgorithm(players);
+        // Step 1: Recalibrate player ranks for each match in the matches
+        List<Player> recalibratedPlayers = new ArrayList<>();
+        for (List<Player> match : matches) {
+            recalibratedPlayers.addAll(recalibratePlayerRanks(match)); // Recalibrate each match and combine players
+        }
 
-        // Recalibrate player ranks based on match results
-        List<Player> recalibratedPlayers = recalibratePlayerRanks(matches);
-
-        // Split recalibrated players into 4 new groups
+        // Step 2: Run the matchmaking algorithm on the recalibrated players (combine
+        // them into new groups)
         List<List<Player>> newMatches = matchmakingAlgorithm(recalibratedPlayers);
 
-        // Store each new match in the round table with new match IDs (1, 2, 3, 4)
+        // Step 3: Store each new match into the round table with new match IDs (1, 2,
+        // 3, 4)
         List<Round> rounds = new ArrayList<>();
         for (int matchId = 1; matchId <= newMatches.size(); matchId++) {
-            String playersData = serializePlayersToJson(newMatches.get(matchId - 1));
+            String playersData = serializePlayersToJson(newMatches.get(matchId - 1)); // Serialize players in each group
             Round round = new Round(tournamentId, roundNumber, matchId, playersData);
             rounds.add(roundRepository.save(round));
         }
@@ -120,17 +125,8 @@ public class RoundService {
     }
 
     // Helper method to recalibrate player ranks after a round
-    public List<Player> recalibratePlayerRanks(List<List<Player>> matches) {
-        List<Player> recalibratedPlayers = new ArrayList<>();
-        for (List<Player> match : matches) {
-            for (int i = 0; i < match.size(); i++) {
-                Player player = match.get(i);
-                // Recalibrate rank based on the player's position in the match
-                int currentRank = player.getRank();
-                player.setRank(currentRank + (8 - i)); // Example logic: higher rank for better positions
-                recalibratedPlayers.add(player);
-            }
-        }
-        return recalibratedPlayers; // Return recalibrated players
+    private List<Player> recalibratePlayerRanks(List<Player> matches) {
+        Elo elo = new Elo(matches);
+        return elo.updateRank();
     }
 }

@@ -1,12 +1,12 @@
-package Matchmaking.Model;
+package Matchmaking.Model.Elo;
 
 public class Player {
     private Long id;
     private Integer rank;
 
     // Constructor
-    public Player(Long id, Integer rank) {
-        this.id = id;
+    public Player(Long i, Integer rank) {
+        this.id = i;
         this.rank = rank;
     }
 
