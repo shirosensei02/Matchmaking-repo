@@ -130,7 +130,7 @@ public class RoundService {
     }
 
     // Helper method to recalibrate player ranks after a round
-    private List<Map<String, Object>> recalibratePlayerRanks(List<List<Map<String, Object>>> matches) {
+    public List<Map<String, Object>> recalibratePlayerRanks(List<List<Map<String, Object>>> matches) {
         // Update player ranks based on the results of the matches
         // Example logic (this should be replaced by your actual elo recalibration
         // logic):

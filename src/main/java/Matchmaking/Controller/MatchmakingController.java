@@ -18,11 +18,11 @@ public class MatchmakingController {
     }
 
     @PostMapping("/{tournamentId}/next-round")
-    public ResponseEntity<Round> createNextRound(@PathVariable Long tournamentId,
-            @RequestBody String playersData,
+    public ResponseEntity<List<Round>> createNextRound(@PathVariable Long tournamentId,
+            @RequestBody List<String> matchResultsData, // Change to List<String> to match the service method
             @RequestParam int currentRound) {
         // Call the service to create the next round
-        Round newRound = roundService.createNextTournamentRound(tournamentId, playersData, currentRound);
-        return ResponseEntity.ok(newRound);
+        List<Round> newRounds = roundService.createNextRound(tournamentId, matchResultsData, currentRound);
+        return ResponseEntity.ok(newRounds);
     }
 }
