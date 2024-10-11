@@ -2,7 +2,7 @@ package Matchmaking.Controller;
 
 import Matchmaking.Model.Round;
 import Matchmaking.Model.RoundService;
-import Matchmaking.Model.Player.Player;
+import Matchmaking.Model.Elo.Player;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -11,7 +11,7 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/matchmaking")
+@RequestMapping("/matchmaking")
 public class MatchmakingController {
 
     private final RoundService roundService;
