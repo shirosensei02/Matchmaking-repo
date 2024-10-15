@@ -69,12 +69,36 @@ public class RoundService {
      * again.
      */
     @Transactional
-public List<Round> createNextRound(Map<String, Object> payload) {
+public List<List<Player>> createNextRound(Map<String, Object> payload) {
     // Extract tournamentId, matches (List<List<Player>>), and roundNumber from the payload
-    Long tournamentId = (Long) payload.get("tournamentId");
+    Long tournamentId = ((Number) payload.get("tournamentId")).longValue();
+    Integer roundNumber = (Integer) payload.get("round");
+
+    // Extract playerGroups
     @SuppressWarnings("unchecked")
-    List<List<Player>> matches = (List<List<Player>>) payload.get("players"); // Now a list of lists
-    Integer roundNumber = (Integer) payload.get("roundNumber");
+    List<List<Map<String, Object>>> playerGroups = (List<List<Map<String, Object>>>) payload.get("playerGroups");
+
+    // Debugging: Check the extracted player groups
+    // System.out.println("Extracted Player Groups: " + playerGroups);
+
+    // Create a list to hold the rounds
+    List<List<Player>> matches = new ArrayList<>();
+
+    // Iterate through each group of players
+    for (List<Map<String, Object>> group : playerGroups) {
+      List<Player> playersInGroup = new ArrayList<>();
+
+      // Iterate through each player in the group
+      for (Map<String, Object> playerMap : group) {
+        Long playerId = ((Number) playerMap.get("id")).longValue();
+        int rank = (Integer) playerMap.get("rank");
+
+        // Create a Player object and add to the playersInGroup list
+        Player player = new Player(playerId, rank);
+        playersInGroup.add(player);
+      }
+      matches.add(playersInGroup);
+    }
 
     // Validate that the round number is either 2 or 3
     if (roundNumber < 2 || roundNumber > 3) {
@@ -101,7 +125,8 @@ public List<Round> createNextRound(Map<String, Object> payload) {
         rounds.add(roundRepository.save(round));
     }
 
-    return rounds; // Return the saved rounds
+
+    return newMatches; // Return the saved rounds
 }
 
     // Helper method to split players into 4 groups based on their ranking
