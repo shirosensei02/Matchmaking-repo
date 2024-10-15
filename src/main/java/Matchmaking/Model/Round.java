@@ -1,5 +1,10 @@
 package Matchmaking.Model;
 
+import org.hibernate.annotations.Type;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.vladmihalcea.hibernate.type.json.JsonType;
+
 import jakarta.persistence.*;
 
 @Entity
@@ -14,18 +19,20 @@ public class Round {
     private Long tournamentId;
 
     @Column(name = "round_id")
-    private Integer roundId;  // Tracks the round (0, 1, 2, etc.)
+    private Integer roundId;
 
     @Column(name = "match_id")
-    private Integer matchId;  // Tracks the match within the round (1, 2, 3, 4)
+    private Integer matchId;
 
+    @Type(JsonType.class)  // Use the custom JSON type mapping
     @Column(name = "players_data", columnDefinition = "json")
-    private String playersData;  // JSON structure containing 8 players for this match
+    private JsonNode playersData;  // JsonNode for JSON data
+
 
     public Round() {
     }
 
-    public Round(Long tournamentId, Integer roundId, Integer matchId, String playersData) {
+    public Round(Long tournamentId, Integer roundId, Integer matchId, JsonNode playersData) {
         this.tournamentId = tournamentId;
         this.roundId = roundId;
         this.matchId = matchId;
@@ -65,11 +72,11 @@ public class Round {
         this.matchId = matchId;
     }
 
-    public String getPlayersData() {
+    public JsonNode getPlayersData() {
         return playersData;
     }
 
-    public void setPlayersData(String playersData) {
+    public void setPlayersData(JsonNode playersData) {
         this.playersData = playersData;
     }
 }
