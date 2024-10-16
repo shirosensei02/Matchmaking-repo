@@ -20,7 +20,7 @@ public class Elo {
     for (int i = 0; i < playerList.size(); i++) {
       Player player = playerList.get(i);
       int expectedScore = calculateAverageExpectedScore(player);
-      int updatedRank = player.getRank() + (k * (score[i] - expectedScore));
+      int updatedRank = player.getRank() + (k * (score[i % 8] - expectedScore));
       if (updatedRank < 0){
         updatedRank = 0;
       }
