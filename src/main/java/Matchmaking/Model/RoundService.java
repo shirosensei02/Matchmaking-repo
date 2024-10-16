@@ -140,9 +140,16 @@ public List<List<Player>> createNextRound(Map<String, Object> payload) {
             groups.add(new ArrayList<>()); // Initialize 4 groups
         }
 
-        for (int i = 0; i < players.size(); i++) {
-            // Distribute players across 4 groups
-            groups.get(i % 4).add(players.get(i));
+        // for (int i = 0; i < players.size(); i++) {
+        //     // Distribute players across 4 groups
+        //     groups.get(i % 4).add(players.get(i));
+        // }
+
+        for (int i = 0; i < 4; i++) {
+          int start = i * 8;
+          for (int j = start; j < start + 8; j++) {
+            groups.get(i).add(players.get(j));
+          }
         }
 
         return groups;
