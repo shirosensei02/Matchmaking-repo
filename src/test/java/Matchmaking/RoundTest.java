@@ -1,18 +1,29 @@
 package Matchmaking;
 
 import Matchmaking.Model.Round;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 public class RoundTest {
 
     @Test
-    public void testRoundEntity() {
+    public void testRoundEntity() throws Exception {
+        // ObjectMapper instance for handling JSON
+        ObjectMapper objectMapper = new ObjectMapper();
+
         // Sample data
         Long tournamentId = 1L;
         Integer roundId = 1;
         Integer matchId = 1;
-        String playersData = "[{\"players\": [1, 2, 3, 4, 5, 6, 7, 8]}]";
+
+        // JSON String representing the players data
+        String playersDataStr = "[{\"players\": [1, 2, 3, 4, 5, 6, 7, 8]}]";
+
+        // Convert String to JsonNode
+        JsonNode playersData = objectMapper.readTree(playersDataStr);
 
         // Create a new Round instance
         Round round = new Round(tournamentId, roundId, matchId, playersData);
@@ -30,7 +41,12 @@ public class RoundTest {
         round.setMatchId(3);
         assertEquals(3, round.getMatchId());
 
-        round.setPlayersData("[{\"players\": [9, 10, 11, 12, 13, 14, 15, 16]}]");
-        assertEquals("[{\"players\": [9, 10, 11, 12, 13, 14, 15, 16]}]", round.getPlayersData());
+        // New JSON String for updating playersData
+        String newPlayersDataStr = "[{\"players\": [9, 10, 11, 12, 13, 14, 15, 16]}]";
+        JsonNode newPlayersData = objectMapper.readTree(newPlayersDataStr);
+
+        // Test playersData setter
+        round.setPlayersData(newPlayersData);
+        assertEquals(newPlayersData, round.getPlayersData());
     }
 }
