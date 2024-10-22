@@ -32,18 +32,34 @@ public class RoundService {
      */
     @Transactional
     public List<List<Player>> createFirstRound(Map<String, Object> payload) {
-        // Extract the tournamentId
-        Long tournamentId = ((Number) payload.get("tournamentId")).longValue();
+        // Validate the payload and extract the tournamentId
+        if (payload.get("tournamentId") == null) {
+            throw new IllegalArgumentException("Tournament ID is missing");
+        }
 
-        // Extract the players data from the payload
+        Long tournamentId = ((Number) payload.get("tournamentId")).longValue();
+        
+        if (tournamentId <= 0) {
+            throw new IllegalArgumentException("Tournament ID must be greater than zero");
+        }
+
+        // Extract and validate the players data from the payload
         @SuppressWarnings("unchecked")
         List<Map<String, Object>> playersData = (List<Map<String, Object>>) payload.get("players");
+        
+        if (playersData == null || playersData.isEmpty()) {
+            throw new IllegalArgumentException("Players data cannot be null or empty");
+        }
+        
         List<Player> players = new ArrayList<>();
-
         for (Map<String, Object> playerMap : playersData) {
             Long playerId = ((Number) playerMap.get("id")).longValue();
             int rank = (int) playerMap.get("rank");
             players.add(new Player(playerId, rank));
+        }
+
+        if (players.size() != 32) {
+            throw new IllegalArgumentException("There must be exactly 32 players");
         }
 
         // Use the matchmaking algorithm to split players into groups of 8
@@ -69,65 +85,79 @@ public class RoundService {
      * again.
      */
     @Transactional
-public List<List<Player>> createNextRound(Map<String, Object> payload) {
-    // Extract tournamentId, matches (List<List<Player>>), and roundNumber from the payload
-    Long tournamentId = ((Number) payload.get("tournamentId")).longValue();
-    Integer roundNumber = (Integer) payload.get("round");
-
-    // Extract playerGroups
-    @SuppressWarnings("unchecked")
-    List<List<Map<String, Object>>> playerGroups = (List<List<Map<String, Object>>>) payload.get("playerGroups");
-
-    // Debugging: Check the extracted player groups
-    // System.out.println("Extracted Player Groups: " + playerGroups);
-
-    // Create a list to hold the rounds
-    List<List<Player>> matches = new ArrayList<>();
-
-    // Iterate through each group of players
-    for (List<Map<String, Object>> group : playerGroups) {
-      List<Player> playersInGroup = new ArrayList<>();
-
-      // Iterate through each player in the group
-      for (Map<String, Object> playerMap : group) {
-        Long playerId = ((Number) playerMap.get("id")).longValue();
-        int rank = (Integer) playerMap.get("rank");
-
-        // Create a Player object and add to the playersInGroup list
-        Player player = new Player(playerId, rank);
-        playersInGroup.add(player);
-      }
-      matches.add(playersInGroup);
+    public List<List<Player>> createNextRound(Map<String, Object> payload) {
+        // Validate the payload and extract the tournamentId
+        if (payload.get("tournamentId") == null) {
+            throw new IllegalArgumentException("Tournament ID is missing");
+        }
+        Long tournamentId = ((Number) payload.get("tournamentId")).longValue();
+        
+        if (tournamentId <= 0) {
+            throw new IllegalArgumentException("Tournament ID must be greater than zero");
+        }
+    
+        // Validate the round number
+        if (payload.get("round") == null) {
+            throw new IllegalArgumentException("Round number is missing");
+        }
+        Integer roundNumber = (Integer) payload.get("round");
+        
+        if (roundNumber < 2 || roundNumber > 3) {
+            throw new IllegalStateException("Invalid round number. Only rounds 2 and 3 are allowed.");
+        }
+    
+        // Validate and extract the playerGroups
+        @SuppressWarnings("unchecked")
+        List<List<Map<String, Object>>> playerGroups = (List<List<Map<String, Object>>>) payload.get("playerGroups");
+        
+        if (playerGroups == null || playerGroups.isEmpty()) {
+            throw new IllegalArgumentException("Player groups cannot be null or empty");
+        }
+    
+        // Create a list to hold the matches
+        List<List<Player>> matches = new ArrayList<>();
+    
+        // Iterate through each group of players
+        for (List<Map<String, Object>> group : playerGroups) {
+            List<Player> playersInGroup = new ArrayList<>();
+    
+            // Iterate through each player in the group
+            for (Map<String, Object> playerMap : group) {
+                if (playerMap.get("id") == null || playerMap.get("rank") == null) {
+                    throw new IllegalArgumentException("Player ID and rank cannot be null");
+                }
+                Long playerId = ((Number) playerMap.get("id")).longValue();
+                int rank = (Integer) playerMap.get("rank");
+    
+                // Create a Player object and add to the playersInGroup list
+                Player player = new Player(playerId, rank);
+                playersInGroup.add(player);
+            }
+            matches.add(playersInGroup);
+        }
+    
+        // Step 1: Recalibrate player ranks for each match in the matches
+        List<Player> recalibratedPlayers = new ArrayList<>();
+        for (List<Player> match : matches) {
+            recalibratedPlayers.addAll(recalibratePlayerRanks(match)); // Recalibrate each match and combine players
+        }
+    
+        // Step 2: Run the matchmaking algorithm on the recalibrated players (combine them into new groups)
+        List<List<Player>> newMatches = matchmakingAlgorithm(recalibratedPlayers);
+    
+        // Step 3: Store each new match into the round table with new match IDs (1, 2, 3, 4)
+        List<Round> rounds = new ArrayList<>();
+        for (int matchId = 1; matchId <= newMatches.size(); matchId++) {
+            // Convert the list of players into a JsonNode for storing in the database
+            JsonNode playersJsonData = objectMapper.valueToTree(newMatches.get(matchId - 1));
+    
+            // Create a new Round object and save it to the database
+            Round round = new Round(tournamentId, roundNumber, matchId, playersJsonData);
+            rounds.add(roundRepository.save(round));
+        }
+    
+        return newMatches; // Return the saved rounds
     }
-
-    // Validate that the round number is either 2 or 3
-    if (roundNumber < 2 || roundNumber > 3) {
-        throw new IllegalStateException("Invalid round number. Only rounds 2 and 3 are allowed.");
-    }
-
-    // Step 1: Recalibrate player ranks for each match in the matches
-    List<Player> recalibratedPlayers = new ArrayList<>();
-    for (List<Player> match : matches) {
-        recalibratedPlayers.addAll(recalibratePlayerRanks(match)); // Recalibrate each match and combine players
-    }
-
-    // Step 2: Run the matchmaking algorithm on the recalibrated players (combine them into new groups)
-    List<List<Player>> newMatches = matchmakingAlgorithm(recalibratedPlayers);
-
-    // Step 3: Store each new match into the round table with new match IDs (1, 2, 3, 4)
-    List<Round> rounds = new ArrayList<>();
-    for (int matchId = 1; matchId <= newMatches.size(); matchId++) {
-        // Convert the list of players into a JsonNode for storing in the database
-        JsonNode playersJsonData = objectMapper.valueToTree(newMatches.get(matchId - 1));
-
-        // Create a new Round object and save it to the database
-        Round round = new Round(tournamentId, roundNumber, matchId, playersJsonData);
-        rounds.add(roundRepository.save(round));
-    }
-
-
-    return newMatches; // Return the saved rounds
-}
 
     // Helper method to split players into 4 groups based on their ranking
     private List<List<Player>> matchmakingAlgorithm(List<Player> players) {
