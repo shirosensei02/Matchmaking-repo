@@ -11,21 +11,16 @@ public class RoundTest {
 
     @Test
     public void testRoundEntity() throws Exception {
-        // ObjectMapper instance for handling JSON
         ObjectMapper objectMapper = new ObjectMapper();
 
-        // Sample data
         Long tournamentId = 1L;
         Integer roundId = 1;
         Integer matchId = 1;
 
-        // JSON String representing the players data
         String playersDataStr = "[{\"players\": [1, 2, 3, 4, 5, 6, 7, 8]}]";
 
-        // Convert String to JsonNode
         JsonNode playersData = objectMapper.readTree(playersDataStr);
 
-        // Create a new Round instance
         Round round = new Round(tournamentId, roundId, matchId, playersData);
 
         // Test getters

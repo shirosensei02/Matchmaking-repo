@@ -4,7 +4,7 @@ import Matchmaking.Model.Elo.Player;
 import Matchmaking.Model.Round;
 import Matchmaking.Model.RoundRepository;
 import Matchmaking.Model.RoundService;
-import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -16,6 +16,7 @@ import org.mockito.MockitoAnnotations;
 import java.util.*;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.Mockito.*;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -24,133 +25,259 @@ public class RoundServiceTest {
     @Mock
     private RoundRepository roundRepository;
 
+    @Mock
+    private ObjectMapper objectMapper;
+
     @InjectMocks
     private RoundService roundService;
 
-    private ObjectMapper objectMapper = new ObjectMapper();
-
     @BeforeEach
-    public void setup() {
+    void setUp() {
         MockitoAnnotations.openMocks(this);
     }
 
-    @Test
-    public void testCreateFirstRound() throws JsonProcessingException {
-        Long tournamentId = 1L;
+    private Map<String, Object> createPlayerMap(Long id, int rank) {
+        Map<String, Object> playerMap = new HashMap<>();
+        playerMap.put("id", id);
+        playerMap.put("rank", rank);
+        return playerMap;
+    }
 
-        // Prepare the list of players (32 players)
+
+    private List<Map<String, Object>> createPlayerMaps(int count) {
         List<Map<String, Object>> players = new ArrayList<>();
-        for (int i = 1; i <= 32; i++) {
-            Map<String, Object> player = new HashMap<>();
-            player.put("id", (long) i);  // Player IDs are long
-            player.put("rank", i);  // Assigning rank as i for simplicity
-            players.add(player);
-        }
-
-        // Prepare the payload with tournamentId and players
-        Map<String, Object> payload = new HashMap<>();
-        payload.put("tournamentId", tournamentId);
-        payload.put("players", players);
-
-        // Mock repository save behavior
-        when(roundRepository.save(any(Round.class))).thenAnswer(invocation -> invocation.getArgument(0));
-
-        // Call the service method with the payload
-        List<List<Player>> matches = roundService.createFirstRound(payload);
-
-        // Verify that 4 matches (groups of 8 players each) are created
-        assertEquals(4, matches.size());
-
-        // Verify that save was called 4 times (once for each match)
-        verify(roundRepository, times(4)).save(any(Round.class));
-
-        // Capture the arguments passed to the save method
-        ArgumentCaptor<Round> roundCaptor = ArgumentCaptor.forClass(Round.class);
-        verify(roundRepository, times(4)).save(roundCaptor.capture());
-
-        // Check the saved rounds for consistency
-        List<Round> savedRounds = roundCaptor.getAllValues();
-        assertEquals(4, savedRounds.size());  // Ensure 4 rounds are saved
-        for (Round round : savedRounds) {
-            assertNotNull(round.getPlayersData());  // Ensure players data is not null
-            assertEquals(tournamentId, round.getTournamentId());  // Verify the tournamentId
-        }
-    }
-
-    @Test
-    public void testCreateNextRound() throws JsonProcessingException {
-        Long tournamentId = 1L;
-        int currentRound = 2;
-
-        // Prepare hardcoded matches with players
-        List<Map<String, Object>> match1 = createPlayerList(1, 8);
-        List<Map<String, Object>> match2 = createPlayerList(9, 16);
-        List<Map<String, Object>> match3 = createPlayerList(17, 24);
-        List<Map<String, Object>> match4 = createPlayerList(25, 32);
-
-        // Combine the matches into a list
-        List<List<Map<String, Object>>> playerGroups = List.of(match1, match2, match3, match4);
-
-        // Prepare the payload
-        Map<String, Object> payload = new HashMap<>();
-        payload.put("tournamentId", tournamentId);
-        payload.put("playerGroups", playerGroups);
-        payload.put("round", currentRound);
-
-        // Mock repository save behavior
-        when(roundRepository.save(any(Round.class))).thenAnswer(invocation -> invocation.getArgument(0));
-
-        // Call the service method
-        List<List<Player>> newMatches = roundService.createNextRound(payload);
-
-        // Verify that 4 rounds are created
-        assertEquals(4, newMatches.size());
-
-        // Capture saved rounds
-        ArgumentCaptor<Round> roundCaptor = ArgumentCaptor.forClass(Round.class);
-        verify(roundRepository, times(4)).save(roundCaptor.capture());
-
-        // Verify the saved rounds
-        List<Round> savedRounds = roundCaptor.getAllValues();
-        for (Round round : savedRounds) {
-            assertEquals(tournamentId, round.getTournamentId());
-            assertNotNull(round.getPlayersData());  // Ensure players data is saved as JSON
-        }
-    }
-
-    @Test
-    public void testRecalibratePlayerRanks() {
-        // Sample players before recalibration
-        Player player1 = new Player(1L, 10); // Initial rank 10
-        Player player2 = new Player(2L, 8);  // Initial rank 8
-
-        List<Player> match = List.of(player1, player2);
-
-        // Recalibrate player ranks using the service method
-        List<Player> recalibratedPlayers = roundService.recalibratePlayerRanks(match);
-
-        // Assuming the Elo system adjusts ranks based on performance
-        // In this test, we'll just print out the recalibrated ranks
-        System.out.println("After recalibration:");
-        for (Player player : recalibratedPlayers) {
-            System.out.println("Player - ID: " + player.getId() + ", New Rank: " + player.getRank());
-        }
-
-        // Assertions can be based on expected behavior after recalibration
-        // For now, the printed output will help debug rank adjustments
-        // assertEquals(expectedRank1, recalibratedPlayers.get(0).getRank());
-        // assertEquals(expectedRank2, recalibratedPlayers.get(1).getRank());
-    }
-
-    // Helper method to create a list of players
-    private List<Map<String, Object>> createPlayerList(int startId, int endId) {
-        List<Map<String, Object>> players = new ArrayList<>();
-        for (int i = startId; i <= endId; i++) {
-            Map<String, Object> player = new HashMap<>();
-            player.put("id", (long) i);  // Player IDs are long
-            player.put("rank", i);  // Assigning rank as i for simplicity
-            players.add(player);
+        for (long i = 1; i <= count; i++) {
+            players.add(createPlayerMap(i, (int) (1000 + i)));
         }
         return players;
     }
+
+
+    @Test
+void testCreateFirstRound() {
+    Long tournamentId = 1L;
+    List<Map<String, Object>> playersData = createPlayerMaps(32);
+    Map<String, Object> payload = new HashMap<>();
+    payload.put("tournamentId", tournamentId);
+    payload.put("players", playersData);
+
+    JsonNode mockJsonNode = mock(JsonNode.class);
+    when(objectMapper.valueToTree(any())).thenReturn(mockJsonNode);
+
+    List<List<Player>> result = roundService.createFirstRound(payload);
+
+    assertNotNull(result, "Result should not be null.");
+    assertEquals(4, result.size(), "There should be 4 matches.");
+    for (List<Player> match : result) {
+        assertEquals(8, match.size(), "Each match should have 8 players.");
+    }
+
+    verify(roundRepository, times(4)).save(any(Round.class));
+
+    verify(objectMapper, times(4)).valueToTree(any());
+}
+
+
+    @Test
+    void testCreateFirstRound_MissingTournamentId() {
+        List<Map<String, Object>> playersData = createPlayerMaps(32);
+        Map<String, Object> payload = new HashMap<>();
+        payload.put("players", playersData);
+
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
+            roundService.createFirstRound(payload);
+        });
+
+        assertEquals("Tournament ID must be provided and greater than zero.", exception.getMessage());
+    }
+
+    @Test
+    void testCreateFirstRound_InvalidTournamentId() {
+        List<Map<String, Object>> playersData = createPlayerMaps(32);
+        Map<String, Object> payload = new HashMap<>();
+        payload.put("tournamentId", 0L);
+        payload.put("players", playersData);
+
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
+            roundService.createFirstRound(payload);
+        });
+
+        assertEquals("Tournament ID must be provided and greater than zero.", exception.getMessage());
+    }
+
+    @Test
+    void testCreateFirstRound_WrongNumberOfPlayers() {
+        Long tournamentId = 1L;
+        List<Map<String, Object>> playersData = createPlayerMaps(30); // Less than 32
+        Map<String, Object> payload = new HashMap<>();
+        payload.put("tournamentId", tournamentId);
+        payload.put("players", playersData);
+
+        // Act & Assert
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
+            roundService.createFirstRound(payload);
+        });
+
+        assertEquals("Exactly 32 players are required.", exception.getMessage());
+    }
+
+    @Test
+    void testCreateNextRound() {
+        Long tournamentId = 1L;
+        Integer roundNumber = 2;
+        List<List<Map<String, Object>>> playerGroupsData = new ArrayList<>();
+
+        // Create 4 groups, each with 8 players
+        for (int g = 0; g < 4; g++) {
+            List<Map<String, Object>> group = new ArrayList<>();
+            for (int p = 0; p < 8; p++) {
+                group.add(createPlayerMap((long) (g * 8 + p + 1), 1000 + g * 8 + p + 1));
+            }
+            playerGroupsData.add(group);
+        }
+
+        Map<String, Object> payload = new HashMap<>();
+        payload.put("tournamentId", tournamentId);
+        payload.put("round", roundNumber);
+        payload.put("playerGroups", playerGroupsData);
+
+        when(objectMapper.valueToTree(any())).thenReturn(mock(JsonNode.class));
+
+        RoundService spyService = spy(roundService);
+        doReturn(playerGroupsData.stream()
+                .flatMap(List::stream)
+                .map(playerMap -> new Player((Long) playerMap.get("id"), (int) playerMap.get("rank")))
+                .toList())
+                .when(spyService).recalibratePlayerRanks(anyList());
+
+        List<List<Player>> result = spyService.createNextRound(payload);
+
+        assertNotNull(result);
+        assertEquals(4, result.size(), "There should be 4 matches.");
+        for (List<Player> match : result) {
+            assertEquals(8, match.size(), "Each match should have 8 players.");
+        }
+
+        verify(roundRepository, times(4)).save(any(Round.class));
+    }
+
+
+    @Test
+    void testCreateNextRound_MissingPlayerGroups() {
+        Long tournamentId = 1L;
+        Integer roundNumber = 2;
+        Map<String, Object> payload = new HashMap<>();
+        payload.put("tournamentId", tournamentId);
+        payload.put("round", roundNumber);
+
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
+            roundService.createNextRound(payload);
+        });
+
+        assertEquals("Player groups cannot be null or empty.", exception.getMessage());
+    }
+
+    @Test
+    void testCreateNextRound_EmptyPlayerGroups() {
+        // Arrange
+        Long tournamentId = 1L;
+        Integer roundNumber = 2;
+        List<List<Map<String, Object>>> playerGroupsData = new ArrayList<>(); // Empty
+
+        Map<String, Object> payload = new HashMap<>();
+        payload.put("tournamentId", tournamentId);
+        payload.put("round", roundNumber);
+        payload.put("playerGroups", playerGroupsData);
+
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
+            roundService.createNextRound(payload);
+        });
+
+        assertEquals("Player groups cannot be null or empty.", exception.getMessage());
+    }
+
+
+    @Test
+    void testCreateNextRound_RecalibratePlayerRanksCalled() {
+        Long tournamentId = 1L;
+        Integer roundNumber = 2;
+        List<List<Map<String, Object>>> playerGroupsData = new ArrayList<>();
+
+        for (int groupIndex = 0; groupIndex < 4; groupIndex++) {
+            List<Map<String, Object>> group = new ArrayList<>();
+            for (long i = 1; i <= 8; i++) {
+                long playerId = groupIndex * 8 + i;
+                group.add(createPlayerMap(playerId, 1000 + (int) playerId));
+            }
+            playerGroupsData.add(group);
+        }
+
+        Map<String, Object> payload = new HashMap<>();
+        payload.put("tournamentId", tournamentId);
+        payload.put("round", roundNumber);
+        payload.put("playerGroups", playerGroupsData);
+
+        when(objectMapper.valueToTree(any())).thenReturn(mock(JsonNode.class));
+
+        RoundService spyService = spy(roundService);
+        List<Player> recalibratedPlayers = new ArrayList<>();
+        for (int groupIndex = 0; groupIndex < 4; groupIndex++) {
+            for (int playerIndex = 0; playerIndex < 8; playerIndex++) {
+                long playerId = groupIndex * 8 + playerIndex + 1;
+                recalibratedPlayers.add(new Player(playerId, 1000 + (int) playerId));
+            }
+        }
+        doReturn(recalibratedPlayers).when(spyService).recalibratePlayerRanks(anyList());
+
+        List<List<Player>> result = spyService.createNextRound(payload);
+
+        assertNotNull(result, "Result should not be null.");
+        assertEquals(4, result.size(), "There should be 4 matches.");
+        for (List<Player> match : result) {
+            assertEquals(8, match.size(), "Each match should have 8 players.");
+        }
+
+        // Verify that recalibratePlayerRanks was called 4 times with any List<Player>
+        verify(spyService, times(4)).recalibratePlayerRanks(anyList());
+
+    }
+
+    @Test
+    void testCreateFirstRound_StoreMatchesInRoundsCalledCorrectly() {
+        Long tournamentId = 1L;
+        List<Map<String, Object>> playersData = createPlayerMaps(32);
+        Map<String, Object> payload = new HashMap<>();
+        payload.put("tournamentId", tournamentId);
+        payload.put("players", playersData);
+
+        JsonNode mockJsonNode = mock(JsonNode.class);
+        when(objectMapper.valueToTree(any())).thenReturn(mockJsonNode);
+
+        List<List<Player>> result = roundService.createFirstRound(payload);
+
+        ArgumentCaptor<Round> roundCaptor = ArgumentCaptor.forClass(Round.class);
+        verify(roundRepository, times(4)).save(roundCaptor.capture());
+
+        List<Round> savedRounds = roundCaptor.getAllValues();
+        assertEquals(4, savedRounds.size(), "Should save 4 rounds for 4 matches.");
+
+        for (int i = 0; i < savedRounds.size(); i++) {
+            Round round = savedRounds.get(i);
+            assertEquals(tournamentId, round.getTournamentId(), "Tournament ID should match.");
+            assertEquals(1, round.getRoundId(), "Round number should be 1.");
+            assertEquals(i + 1, round.getMatchId(), "Match ID should be sequential.");
+            assertEquals(mockJsonNode, round.getPlayersData(), "Players JSON data should match.");
+        }
+    }
+
+    @Test
+    void testRecalibratePlayerRanks_EmptyMatch() {
+        List<Player> emptyMatch = new ArrayList<>();
+
+        List<Player> result = roundService.recalibratePlayerRanks(emptyMatch);
+
+        assertNotNull(result);
+        assertTrue(result.isEmpty(), "Recalibrated players should be empty.");
+    }
+
 }
