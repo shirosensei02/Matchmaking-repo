@@ -14,9 +14,6 @@ public class Elo {
   }
 
   public List<Player> updateRank(){
-    Game game = new Game(playerList);
-    playerList = game.gameEnd();
-
     for (int i = 0; i < playerList.size(); i++) {
       Player player = playerList.get(i);
       int expectedScore = calculateAverageExpectedScore(player);
