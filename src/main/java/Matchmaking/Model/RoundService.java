@@ -53,7 +53,7 @@ public class RoundService {
         List<Player> recalibratedPlayers = extractAndRecalibratePlayers(payload);
 
         // Re-split recalibrated players into matches and store each match
-        List<List<Player>> newMatches = splitIntoMatches(recalibratedPlayers);
+        List<List<Player>> newMatches = matchmakingAlgorithm(recalibratedPlayers);
         storeMatchesInRounds(tournamentId, roundNumber, newMatches);
 
         return newMatches;
