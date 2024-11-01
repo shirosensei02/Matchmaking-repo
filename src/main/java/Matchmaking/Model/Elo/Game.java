@@ -13,7 +13,6 @@ public class Game {
 
   public List<Player> gameEnd(){
     List<Player> mutablePlayerList = new ArrayList<>(playerList);
-    Collections.shuffle(mutablePlayerList);
     return mutablePlayerList;
   }
 }
