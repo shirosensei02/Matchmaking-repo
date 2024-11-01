@@ -113,7 +113,6 @@ void testCreateFirstRound() {
         payload.put("tournamentId", tournamentId);
         payload.put("players", playersData);
 
-        // Act & Assert
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
             roundService.createFirstRound(payload);
         });
@@ -179,7 +178,6 @@ void testCreateFirstRound() {
 
     @Test
     void testCreateNextRound_EmptyPlayerGroups() {
-        // Arrange
         Long tournamentId = 1L;
         Integer roundNumber = 2;
         List<List<Map<String, Object>>> playerGroupsData = new ArrayList<>(); // Empty
