@@ -1,0 +1,9 @@
+Matchmaking\Model\Elo\Elo.class
+Matchmaking\Model\Round.class
+Matchmaking\Model\RoundRepository.class
+Matchmaking\Model\Elo\Game.class
+Matchmaking\Model\Elo\Player.class
+Matchmaking\Model\RoundService.class
+Matchmaking\Controller\MatchmakingController.class
+Matchmaking\MatchmakingApplication.class
+Matchmaking\Controller\GlobalExceptionHandler.class
