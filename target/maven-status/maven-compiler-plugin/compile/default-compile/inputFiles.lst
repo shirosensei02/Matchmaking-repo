@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 C:\Users\iamur\OneDrive\Documents\SMU\CS203 project\Matchmaking-repo\src\main\java\Matchmaking\Controller\GlobalExceptionHandler.java
 C:\Users\iamur\OneDrive\Documents\SMU\CS203 project\Matchmaking-repo\src\main\java\Matchmaking\Controller\MatchmakingController.java
 C:\Users\iamur\OneDrive\Documents\SMU\CS203 project\Matchmaking-repo\src\main\java\Matchmaking\MatchmakingApplication.java
@@ -8,14 +7,3 @@ C:\Users\iamur\OneDrive\Documents\SMU\CS203 project\Matchmaking-repo\src\main\ja
 C:\Users\iamur\OneDrive\Documents\SMU\CS203 project\Matchmaking-repo\src\main\java\Matchmaking\Model\Round.java
 C:\Users\iamur\OneDrive\Documents\SMU\CS203 project\Matchmaking-repo\src\main\java\Matchmaking\Model\RoundRepository.java
 C:\Users\iamur\OneDrive\Documents\SMU\CS203 project\Matchmaking-repo\src\main\java\Matchmaking\Model\RoundService.java
-=======
-/Users/kenneth_21/CS203-Project/Matchmaking-repo/src/main/java/Matchmaking/Controller/GlobalExceptionHandler.java
-/Users/kenneth_21/CS203-Project/Matchmaking-repo/src/main/java/Matchmaking/Controller/MatchmakingController.java
-/Users/kenneth_21/CS203-Project/Matchmaking-repo/src/main/java/Matchmaking/MatchmakingApplication.java
-/Users/kenneth_21/CS203-Project/Matchmaking-repo/src/main/java/Matchmaking/Model/Elo/Elo.java
-/Users/kenneth_21/CS203-Project/Matchmaking-repo/src/main/java/Matchmaking/Model/Elo/Game.java
-/Users/kenneth_21/CS203-Project/Matchmaking-repo/src/main/java/Matchmaking/Model/Elo/Player.java
-/Users/kenneth_21/CS203-Project/Matchmaking-repo/src/main/java/Matchmaking/Model/Round.java
-/Users/kenneth_21/CS203-Project/Matchmaking-repo/src/main/java/Matchmaking/Model/RoundRepository.java
-/Users/kenneth_21/CS203-Project/Matchmaking-repo/src/main/java/Matchmaking/Model/RoundService.java
->>>>>>> 95502ea389e14b3fcd2395a483816aa6551cd0a5
