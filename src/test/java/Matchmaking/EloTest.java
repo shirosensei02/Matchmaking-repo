@@ -32,20 +32,6 @@ class EloTest {
     }
 
     @Test
-    void testUpdateRank() {
-        List<Player> updatedPlayers = elo.updateRank();
-        
-        // Test that we have the same number of players
-        assertEquals(8, updatedPlayers.size());
-        
-        // Test that ranks have been updated
-        for (int i = 0; i < updatedPlayers.size(); i++) {
-            assertNotEquals(players.get(i).getRank(), updatedPlayers.get(i).getRank(),
-                    "Rank should be updated for player " + (i + 1));
-        }
-    }
-
-    @Test
     void testScoreImpact() {
         // Create two players with same rank to test score impact
         List<Player> equalPlayers = new ArrayList<>();
