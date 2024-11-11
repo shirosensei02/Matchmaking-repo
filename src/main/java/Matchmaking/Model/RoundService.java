@@ -59,7 +59,6 @@ public class RoundService {
         return newMatches;
     }
 
-    // Helper method to validate and extract tournamentId
     private Long validateAndExtractTournamentId(Map<String, Object> payload) {
         Object tournamentIdObj = payload.get("tournamentId");
         if (tournamentIdObj == null || ((Number) tournamentIdObj).longValue() <= 0) {
@@ -68,7 +67,6 @@ public class RoundService {
         return ((Number) tournamentIdObj).longValue();
     }
 
-    // Helper method to validate and extract players
     private List<Player> extractAndValidatePlayers(Map<String, Object> payload, int requiredSize) {
         @SuppressWarnings("unchecked")
         List<Map<String, Object>> playersData = (List<Map<String, Object>>) payload.get("players");
@@ -84,7 +82,6 @@ public class RoundService {
         return players;
     }
 
-    // Helper method to validate and extract round number
     private Integer validateAndExtractRoundNumber(Map<String, Object> payload) {
         Object roundObj = payload.get("round");
         if (roundObj == null || (Integer) roundObj < 2 || (Integer) roundObj > 3) {
@@ -126,7 +123,7 @@ public class RoundService {
         return matchmakingAlgorithm(players);
     }
 
-    // Matchmaking algorithm for creating matches
+
     private List<List<Player>> matchmakingAlgorithm(List<Player> players) {
         List<List<Player>> groups = new ArrayList<>();
         for (int i = 0; i < 4; i++) {
@@ -142,7 +139,6 @@ public class RoundService {
         return groups;
     }
 
-    // Helper method to store matches as rounds
     private void storeMatchesInRounds(Long tournamentId, int roundNumber, List<List<Player>> matches) {
         for (int matchId = 1; matchId <= matches.size(); matchId++) {
             JsonNode playersJsonData = objectMapper.valueToTree(matches.get(matchId - 1));
@@ -151,7 +147,6 @@ public class RoundService {
         }
     }
 
-    // Recalibrates player ranks after a match
     public List<Player> recalibratePlayerRanks(List<Player> match) {
         return new Elo(match).updateRank();
     }

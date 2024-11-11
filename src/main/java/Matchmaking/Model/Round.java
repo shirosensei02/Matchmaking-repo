@@ -24,9 +24,9 @@ public class Round {
     @Column(name = "match_id")
     private Integer matchId;
 
-    @Type(JsonType.class)  // Use the custom JSON type mapping
+    @Type(JsonType.class)  
     @Column(name = "players_data", columnDefinition = "json")
-    private JsonNode playersData;  // JsonNode for JSON data
+    private JsonNode playersData;  
 
 
     public Round() {
@@ -39,7 +39,6 @@ public class Round {
         this.playersData = playersData;
     }
 
-    // Getters and setters
     public Long getId() {
         return id;
     }

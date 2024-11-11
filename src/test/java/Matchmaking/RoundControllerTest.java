@@ -26,7 +26,8 @@ public class RoundControllerTest {
 
     @BeforeEach
     public void setup() {
-        MockitoAnnotations.openMocks(this);  // Initialize mocks
+        MockitoAnnotations.openMocks(this);
+        matchmakingController = new MatchmakingController(roundService);
     }
 
     @Test
