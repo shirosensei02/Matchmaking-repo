@@ -1,9 +1,0 @@
-Matchmaking/Model/RoundService.class
-Matchmaking/Model/Elo/Elo.class
-Matchmaking/MatchmakingApplication.class
-Matchmaking/Model/Elo/Game.class
-Matchmaking/Model/RoundRepository.class
-Matchmaking/Model/Elo/Player.class
-Matchmaking/Controller/MatchmakingController.class
-Matchmaking/Model/Round.class
-Matchmaking/Controller/GlobalExceptionHandler.class
