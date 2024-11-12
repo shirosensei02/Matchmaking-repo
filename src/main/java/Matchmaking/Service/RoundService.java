@@ -1,4 +1,4 @@
-package Matchmaking.Model;
+package Matchmaking.Service;
 
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
@@ -7,8 +7,10 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.JsonNode;
 
-import Matchmaking.Model.Elo.Elo;
-import Matchmaking.Model.Elo.Player;
+import Matchmaking.Service.Elo;
+import Matchmaking.Entity.Player;
+import Matchmaking.Entity.Round;
+import Matchmaking.Repo.RoundRepository;
 
 import java.util.ArrayList;
 import java.util.List;

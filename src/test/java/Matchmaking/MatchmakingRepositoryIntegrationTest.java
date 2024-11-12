@@ -4,8 +4,8 @@ import static org.junit.jupiter.api.Assertions.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
-import Matchmaking.Model.Round;
-import Matchmaking.Model.RoundRepository;
+import Matchmaking.Entity.Round;
+import Matchmaking.Repo.RoundRepository;
 
 import java.util.List;
 

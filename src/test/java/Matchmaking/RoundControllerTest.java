@@ -1,9 +1,9 @@
 package Matchmaking;
 
 import Matchmaking.Controller.MatchmakingController;
-import Matchmaking.Model.Elo.Player;
-import Matchmaking.Model.Round;
-import Matchmaking.Model.RoundService;
+import Matchmaking.Entity.Player;
+import Matchmaking.Entity.Round;
+import Matchmaking.Service.RoundService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;

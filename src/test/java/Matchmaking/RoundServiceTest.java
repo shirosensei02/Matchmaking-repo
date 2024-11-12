@@ -1,9 +1,9 @@
 package Matchmaking;
 
-import Matchmaking.Model.Elo.Player;
-import Matchmaking.Model.Round;
-import Matchmaking.Model.RoundRepository;
-import Matchmaking.Model.RoundService;
+import Matchmaking.Entity.Player;
+import Matchmaking.Repo.RoundRepository;
+import Matchmaking.Entity.Round;
+import Matchmaking.Service.RoundService;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;

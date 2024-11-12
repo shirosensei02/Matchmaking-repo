@@ -1,4 +1,4 @@
-package Matchmaking.Model;
+package Matchmaking.Entity;
 
 import org.hibernate.annotations.Type;
 

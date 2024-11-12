@@ -1,4 +1,4 @@
-package Matchmaking.Model.Elo;
+package Matchmaking.Entity;
 
 public class Player {
     private Long id;

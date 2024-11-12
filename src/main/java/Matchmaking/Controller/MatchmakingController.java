@@ -1,8 +1,8 @@
 package Matchmaking.Controller;
 
-import Matchmaking.Model.Round;
-import Matchmaking.Model.RoundService;
-import Matchmaking.Model.Elo.Player;
+import Matchmaking.Entity.Round;
+import Matchmaking.Service.RoundService;
+import Matchmaking.Entity.Player;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

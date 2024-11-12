@@ -3,8 +3,8 @@ package Matchmaking;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import Matchmaking.Model.Elo.Elo;
-import Matchmaking.Model.Elo.Player;
+import Matchmaking.Entity.Player;
+import Matchmaking.Service.Elo;
 
 import java.util.ArrayList;
 import java.util.List;

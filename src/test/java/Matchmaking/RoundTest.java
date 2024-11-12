@@ -1,6 +1,6 @@
 package Matchmaking;
 
-import Matchmaking.Model.Round;
+import Matchmaking.Entity.Round;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;

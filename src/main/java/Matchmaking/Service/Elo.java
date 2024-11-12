@@ -1,7 +1,9 @@
-package Matchmaking.Model.Elo;
+package Matchmaking.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import Matchmaking.Entity.Player;
 
 
 public class Elo {
