@@ -1,0 +1,26 @@
+trigger:
+  branches:
+    include:
+      - cloudCI  # Replace with the branch you want to trigger the pipeline
+
+pool:
+  name: 'Default'  # Replace with the exact name of your self-hosted agent pool
+
+steps:
+  # Step 1: Check out the repository
+  - checkout: self
+
+  # Step 2: Build with Maven (JDK 21 is already installed on the machine)
+  - script: |
+      mvn clean package -DskipTests
+    displayName: 'Build with Maven'
+
+  # Step 3: Deploy to Azure Spring Apps
+  - powershell: |
+      az spring app deploy `
+        --name matchmaking-service `
+        --service tournamnet-matchmaking `
+        --resource-group cs203 `
+        --artifact-path target/project-0.0.1-SNAPSHOT.jar
+    displayName: 'Deploy to Azure Spring Apps'
+
