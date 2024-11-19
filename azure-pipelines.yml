@@ -12,7 +12,7 @@ steps:
 
   # Step 2: Build with Maven (JDK 21 is already installed on the machine)
   - script: |
-      mvn clean package -DskipTests
+      mvn clean package -DskipTests=False
     displayName: 'Build with Maven'
 
   # Step 3: Deploy to Azure Spring Apps
